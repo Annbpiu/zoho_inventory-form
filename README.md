@@ -1,61 +1,191 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Laravel Application with Vue.js Frontend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+---
 
-## About Laravel
+## 📜 Table of Contents
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- [Requirements](#requirements)
+- [Project Setup](#project-setup)
+- [Development Environment](#development-environment)
+- [Zoho Integration Setup](#zoho-integration-setup)
+- [Running the Application](#running-the-application)
+- [Building for Production](#building-for-production)
+- [Project Structure](#project-structure)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Requirements
 
-## Learning Laravel
+Before starting, ensure you have the following tools installed:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- **PHP** >= 8.2
+- **Composer**
+- **Node.js** >= 18.x and **npm**
+- **SQLite** (used as the database)
+- **Vite** (for frontend asset compilation)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Project Setup
 
-## Laravel Sponsors
+1. **Clone the repository:**
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+   ```bash
+   git clone <REPO_URL>
+   cd <PROJECT_NAME>
+   ```
 
-### Premium Partners
+2. **Install PHP dependencies using Composer:**
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+   ```bash
+   composer install
+   ```
 
-## Contributing
+3. **Install Node.js dependencies via npm:**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   ```bash
+   npm install
+   ```
 
-## Code of Conduct
+4. **Copy the example `.env.example` file into `.env` and configure the environment variables:**
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+   ```bash
+   cp .env.example .env
+   ```
 
-## Security Vulnerabilities
+   For SQLite, ensure the following configuration in `.env`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+   ```
+   DB_CONNECTION=sqlite
+   DB_DATABASE=./database/database.sqlite
+   ```
 
-## License
+   Then, set up the SQLite database file:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+   ```bash
+   touch database/database.sqlite
+   ```
+
+5. **Run database migrations:**
+
+   ```bash
+   php artisan migrate
+   ```
+
+---
+
+## Development Environment
+
+This application supports Laravel Sail (Docker-based container environment). Setting up the development environment:
+
+1. **Install Sail (if not already installed):**
+
+   ```bash
+   composer require laravel/sail --dev
+   ```
+
+2. **Spin up the containers:**
+
+   ```bash
+   ./vendor/bin/sail up
+   ```
+
+3. **Use Sail commands (e.g., npm or Composer):**
+
+   ```bash
+   ./vendor/bin/sail npm install
+   ```
+
+You can also run the application without using Sail if Docker is not available.
+
+---
+
+## Zoho Integration Setup
+
+This application integrates with the **Zoho API** to synchronize data and perform operations. Follow these steps to enable Zoho Integration:
+
+1. **Obtain Zoho API client credentials:**
+    - Visit the [Zoho Developer Console](https://accounts.zoho.com/developerconsole).
+    - Create a new client application and retrieve the **Client ID** and **Client Secret**.
+
+2. **Update Zoho credentials in `.env`:**
+
+   Add the following keys to the `.env` file and replace `<PLACEHOLDER>` values with your Zoho information:
+
+   ```env
+   ZOHO_CLIENT_ID=<your_zoho_client_id>
+   ZOHO_CLIENT_SECRET=<your_zoho_client_secret>
+   ZOHO_REDIRECT_URI=<your_redirect_uri>
+   ZOHO_API_BASE_URL=https://www.zohoapis.com
+   ```
+
+    - `ZOHO_REDIRECT_URI` should match the URI set in your Zoho Developer Console.
+
+3. **Authenticate with Zoho API:**
+
+    - Use the endpoint `/zoho/authenticate` to authorize the application with Zoho. Follow the instructions provided in the application.
+
+4. **Custom Zoho Functionality:**
+    - Zoho-related functionality is handled via the `ZohoAuthController` and synchronized in the `SyncController`.
+
+---
+
+## Running the Application
+
+1. **Start the Laravel development server:**
+
+   ```bash
+   php artisan serve
+   ```
+
+   The application will be accessible at: [http://localhost:8000](http://localhost:8000)
+
+2. **Start the Vite development server:**
+
+   ```bash
+   npm run dev
+   ```
+
+   This starts the Vite server at [http://localhost:5173](http://localhost:5173), providing hot module replacement (HMR) for the frontend.
+
+---
+
+## Building for Production
+
+For production deployment:
+
+1. **Build frontend assets with Vite:**
+
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy the built assets along with the backend.** All required files will be placed in the `public` folder.
+
+---
+
+## Project Structure
+
+Here’s an overview of the main directories and files in the project:
+
+- **`app/Http/Controllers`:**
+  Contains backend controllers such as `InventoryController.php`, `PurchaseOrderController.php`, and `ZohoAuthController.php`.
+
+- **`routes/`:**
+  Application routes, organized into:
+    - `web.php` for web routes
+    - `api.php` for REST API routes
+
+- **`resources/js/components`:**
+  Vue components like `CustomerVendorDetails.vue` and `SalesOrderForm.vue`.
+
+- **`database`:**
+  SQLite database and migrations located in this directory.
+
+- **`resources/views`:**
+  Blade templates for the HTML structure.
+
+- **`tests`:**
+  For unit and feature tests to ensure code reliability.
+
+---
