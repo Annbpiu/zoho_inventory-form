@@ -1,200 +1,44 @@
 <template>
     <div class="container mx-auto p-6 max-w-7xl bg-white text-gray-900 rounded shadow text-sm">
         <h1 class="text-2xl font-semibold mb-6">New Sales Order</h1>
-
-        <!-- Customer & Order Info -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Customer -->
-            <div class="mb-4">
-                <label class="block font-medium text-gray-700 mb-1">
-                    Customer Name <span class="text-red-500">*</span>
-                </label>
-
-                <div class="relative">
-                    <select
-                        v-model="customer.id"
-                        class="input w-full pr-8 appearance-none"
-                        :class="{ 'border-red-500': errors.customerName }"
-                        @change="onCustomerChange"
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-semibold">New Order</h1>
+            <div class="flex items-center space-x-4">
+                <label class="inline-flex items-center">
+                    <input
+                        type="radio"
+                        v-model="orderType"
+                        value="sales"
+                        class="form-radio h-5 w-5 text-blue-600"
                     >
-                        <option disabled value="">Select a customer</option>
-                        <option
-                            v-for="contact in availableContacts"
-                            :key="contact.contact_id"
-                            :value="contact.contact_id"
-                            class="py-2"
-                        >
-                            {{ contact.contact_name }}
-                            <template v-if="contact.company_name">({{ contact.company_name }})</template>
-                        </option>
-                    </select>
-
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <button
-                    @click="showNewCustomerModal = true"
-                    class="w-full mt-1 text-left text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Create New Customer
-                </button>
-
-                <p v-if="errors.customerName" class="text-red-600 text-xs mt-1">
-                    {{ errors.customerName }}
-                </p>
-
-                <div v-if="customer.id" class="mt-2 text-sm text-gray-600">
-                    <p v-if="selectedCustomer?.email">Email: {{ selectedCustomer.email }}</p>
-                    <p v-if="selectedCustomer?.phone">Phone: {{ selectedCustomer.phone }}</p>
-                    <p v-if="selectedCustomer?.billing_address?.address">
-                        Address: {{ selectedCustomer.billing_address.address }}
-                    </p>
-                </div>
-            </div>
-
-            <!-- New Customer -->
-            <div v-if="showNewCustomerModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-                <div class="bg-white rounded-lg p-6 w-full max-w-3xl">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold">New Customer</h2>
-                        <button @click="showNewCustomerModal = false" class="text-gray-500 hover:text-gray-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
-                        <!-- Basic Information -->
-                        <div class="col-span-1">
-                            <h3 class="font-medium text-gray-700 mb-3 border-b pb-2">Basic Information</h3>
-                            <div class="space-y-4">
-                                <div class="grid grid-cols-3 gap-3">
-                                    <select v-model="newCustomer.salutation" class="input">
-                                        <option value="">Title</option>
-                                        <option value="Mr">Mr</option>
-                                        <option value="Ms">Ms</option>
-                                        <option value="Mrs">Mrs</option>
-                                        <option value="Dr">Dr</option>
-                                    </select>
-                                    <input v-model="newCustomer.first_name" placeholder="First Name" class="input col-span-2" />
-                                </div>
-                                <input v-model="newCustomer.last_name" placeholder="Last Name *" class="input" required />
-                                <input v-model="newCustomer.display_name" placeholder="Display Name *" class="input" required />
-                                <input v-model="newCustomer.company_name" placeholder="Company Name" class="input" />
-                            </div>
-                        </div>
-
-                        <!-- Contact Information -->
-                        <div class="col-span-1">
-                            <h3 class="font-medium text-gray-700 mb-3 border-b pb-2">Contact Information</h3>
-                            <div class="space-y-4">
-                                <input v-model="newCustomer.email" placeholder="Email" type="email" class="input" />
-                                <input v-model="newCustomer.phone" placeholder="Phone" class="input" />
-                                <input v-model="newCustomer.mobile" placeholder="Mobile" class="input" />
-                                <input v-model="newCustomer.website" placeholder="Website" class="input" />
-                            </div>
-                        </div>
-
-                        <!-- Address -->
-                        <div class="col-span-2">
-                            <h3 class="font-medium text-gray-700 mb-3 border-b pb-2">Address</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-600 mb-2">Billing Address</h4>
-                                    <textarea v-model="newCustomer.billing_address" placeholder="Address" class="input h-20"></textarea>
-                                    <div class="grid grid-cols-3 gap-3 mt-2">
-                                        <input v-model="newCustomer.billing_city" placeholder="City" class="input" />
-                                        <input v-model="newCustomer.billing_state" placeholder="State/Region" class="input" />
-                                        <input v-model="newCustomer.billing_zip" placeholder="Postal Code" class="input" />
-                                    </div>
-                                    <select v-model="newCustomer.billing_country" class="input mt-2">
-                                        <option value="UA">Ukraine</option>
-                                        <option value="PL">Poland</option>
-                                        <option value="DE">Germany</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-medium text-gray-600 mb-2">Shipping Address</h4>
-                                    <label class="inline-flex items-center">
-                                        <input type="checkbox" v-model="sameAsBilling" class="form-checkbox">
-                                        <span class="ml-2">Same as billing address</span>
-                                    </label>
-                                    <textarea v-model="newCustomer.shipping_address" placeholder="Address" class="input h-20 mt-2" :disabled="sameAsBilling"></textarea>
-                                    <div class="grid grid-cols-3 gap-3 mt-2">
-                                        <input v-model="newCustomer.shipping_city" placeholder="City" class="input" :disabled="sameAsBilling" />
-                                        <input v-model="newCustomer.shipping_state" placeholder="State/Region" class="input" :disabled="sameAsBilling" />
-                                        <input v-model="newCustomer.shipping_zip" placeholder="Postal Code" class="input" :disabled="sameAsBilling" />
-                                    </div>
-                                    <select v-model="newCustomer.shipping_country" class="input mt-2" :disabled="sameAsBilling">
-                                        <option value="UA">Ukraine</option>
-                                        <option value="PL">Poland</option>
-                                        <option value="DE">Germany</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end mt-6 space-x-3">
-                        <button class="btn-cancel" @click="showNewCustomerModal = false">Cancel</button>
-                        <button class="btn-submit" @click="submitNewCustomer">Save</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sales Order# -->
-            <div>
-                <label class="block font-medium mb-1">Sales Order#</label>
-                <input type="text" class="input bg-gray-100" :value="salesOrderNumber" readonly />
-            </div>
-
-            <!-- Reference# -->
-            <div>
-                <label class="block font-medium mb-1">Reference#</label>
-                <input type="text" class="input" :value="customer.id" disabled />
-            </div>
-
-
-            <!-- Sales Order Date -->
-            <div>
-                <label class="block font-medium mb-1">Sales Order Date</label>
-                <input v-model="order.orderDate" type="date" class="input" />
-            </div>
-
-            <!-- Expected Shipment -->
-            <div>
-                <label class="block font-medium mb-1">Expected Shipment Date</label>
-                <input v-model="order.expectedShipmentDate" type="date" class="input" />
-            </div>
-
-            <!-- Payment Terms -->
-            <div>
-                <label class="block font-medium mb-1">Payment Terms</label>
-                <select v-model="order.paymentTerm" class="input">
-                    <option value="">Select Payment Term</option>
-                    <option v-for="term in paymentTerms" :key="term.id" :value="term.id">{{ term.name }}</option>
-                </select>
-            </div>
-
-            <!-- Delivery Method -->
-            <div>
-                <label class="block font-medium mb-1">Delivery Method</label>
-                <select v-model="order.deliveryMethod" class="input">
-                    <option value="">Select Delivery Method</option>
-                    <option v-for="method in deliveryMethods" :key="method.id" :value="method.id">{{ method.name }}</option>
-                </select>
+                    <span class="ml-2">Sales Order</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input
+                        type="radio"
+                        v-model="orderType"
+                        value="purchase"
+                        class="form-radio h-5 w-5 text-blue-600"
+                    >
+                    <span class="ml-2">Purchase Order</span>
+                </label>
             </div>
         </div>
+        <!-- Customer & Order Info -->
+        <CustomerVendorDetails
+            :availableContacts="availableContacts"
+            :customer="customer"
+            :orderType="orderType"
+            :errors="errors"
+            :show-new-customer-modal="showNewCustomerModal"
+            :order="order"
+            :paymentTerms="paymentTerms"
+            :deliveryMethods="deliveryMethods"
+            :sales-order-number="salesOrderNumber"
+            @update-customer="onCustomerChange"
+            @toggle-new-customer-modal="showNewCustomerModal = $event"
+        />
 
-        <!-- Item Table -->
         <div class="mb-8">
             <h2 class="text-lg font-semibold mb-3 border-b pb-2">Item Table</h2>
             <div class="overflow-x-auto">
@@ -245,7 +89,6 @@
                 </table>
             </div>
 
-            <!-- Add Item Buttons -->
             <div class="flex space-x-4 mt-3">
                 <button @click="addItem" class="btn-submit">+ Add New Row</button>
 <!--                <button class="btn-cancel">Add Items in Bulk</button>-->
@@ -254,7 +97,6 @@
 
         <!-- Summary + Notes/Terms -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Notes & Terms -->
             <div class="space-y-4">
                 <div>
                     <label class="block font-medium mb-1">Customer Notes</label>
@@ -266,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- Totals -->
             <div class="bg-gray-50 p-4 rounded border space-y-3 max-w-md ml-auto">
                 <div class="flex justify-between">
                     <span>Sub Total</span>
@@ -310,9 +151,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+
+import CustomerVendorDetails from "@/components/CustomerVendorDetails.vue";
+
 
 const salesOrderNumber = ref('SO-00014')
+const orderType = ref('sales')
 
 const customer = reactive({
     id: '',
@@ -346,9 +191,14 @@ const order = reactive({
     adjustment: 0,
     total: 0,
     termsConditions: '',
+    salesSpecificField: '',
+    purchaseSpecificField: '',
 })
 
 const items = reactive([])
+
+const selectedCustomer = ref(null)
+const sameAsBilling = ref(false)
 
 const availableItems = ref([])
 const availableContacts = ref([])
@@ -364,11 +214,34 @@ const successMessage = ref('')
 const errorMessage = ref('')
 const files = ref([])
 
+async function fetchContactOrVendors() {
+    try {
+        const isPurchase = orderType.value === 'purchase';
+        const url = isPurchase ? '/api/inventory/vendors' : '/api/inventory/contacts';
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            console.error('Failed to load contacts/vendors:', response.statusText);
+            availableContacts.value = [];
+            return;
+        }
+
+        const data = await response.json();
+
+        availableContacts.value = isPurchase ? data.vendors : data;
+
+    } catch (error) {
+        errorMessage.value = error.message || 'Unknown error while fetching contacts/vendors';
+        console.error(error);
+        availableContacts.value = [];
+    }
+}
+
+
 async function fetchLookups() {
     try {
-        const [itemsRes, contactsRes, taxesRes, paymentTermsRes, deliveryMethodsRes] = await Promise.all([
+        const [itemsRes, taxesRes, paymentTermsRes, deliveryMethodsRes] = await Promise.all([
             fetch('/api/inventory/items'),
-            fetch('/api/inventory/contacts'),
             fetch('/api/inventory/taxes'),
             fetch('/api/inventory/payment-terms'),
             fetch('/api/inventory/delivery-methods'),
@@ -379,13 +252,6 @@ async function fetchLookups() {
             availableItems.value = []
         } else {
             availableItems.value = await itemsRes.json()
-        }
-
-        if (!contactsRes.ok) {
-            console.error('Failed to load contacts:', contactsRes.statusText)
-            availableContacts.value = []
-        } else {
-            availableContacts.value = await contactsRes.json()
         }
 
         if (!taxesRes.ok) {
@@ -403,6 +269,7 @@ async function fetchLookups() {
         console.error(error)
     }
 }
+
 function addItem() {
     items.push({
         id: Date.now(),
@@ -521,6 +388,26 @@ function validateForm() {
     return valid
 }
 
+async function ensureItemHasPurchaseInfo(itemId, customerId) {
+    try {
+        await fetch(`/api/inventory/items/${itemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                item_type: 'inventory',
+                purchase_account_id: '782558000000000509',
+            }),
+        });
+    } catch (error) {
+        console.error(`Помилка при оновленні item ${itemId}:`, error);
+        throw new Error(`Не вдалося оновити item ${itemId} для закупівлі`);
+    }
+}
+
+
 async function submitForm(status = 'confirmed') {
     if (!validateForm()) return;
 
@@ -532,59 +419,94 @@ async function submitForm(status = 'confirmed') {
     successMessage.value = '';
 
     try {
-        const payload = {
-            customer_id: customer.id,
-            date: formatDateForZoho(order.orderDate),
-            shipment_date: formatDateForZoho(order.expectedShipmentDate),
-            reference_number: order.referenceNumber,
-            line_items: items.map(item => ({
-                item_id: item.itemId,
-                name: availableItems.value.find(i => i.item_id === item.itemId)?.name || '',
-                description: item.description || '',
-                rate: item.rate,
-                quantity: item.quantity,
-                tax_id: item.taxId || '',
-                item_total: (item.quantity * item.rate).toFixed(2),
-                unit: "qty"
-            })),
-            notes: order.customerNotes || '',
-            terms: order.termsConditions || '',
-            discount: order.discountPercent > 0 ? `${order.discountPercent}%` : "0%",
-            shipping_charge: order.shippingCharges,
-            adjustment: order.adjustment,
-            is_discount_before_tax: true,
-            discount_type: "entity_level",
-            custom_fields: []
-        };
+        let payload = {};
 
-        const response = await fetch('/api/inventory/create-sales-order', {
+        if (orderType.value === 'sales') {
+            payload = {
+                type: 'sales',
+                sales_specific_field: order.salesSpecificField,
+                customer_id: customer.id,
+                date: formatDateForZoho(order.orderDate),
+                shipment_date: formatDateForZoho(order.expectedShipmentDate),
+                reference_number: order.referenceNumber,
+                line_items: items.map(item => ({
+                    item_id: item.itemId,
+                    name: availableItems.value.find(i => i.item_id === item.itemId)?.name || '',
+                    description: item.description || '',
+                    rate: item.rate,
+                    quantity: item.quantity,
+                    tax_id: item.taxId || '',
+                    item_total: (item.quantity * item.rate).toFixed(2),
+                    unit: "qty"
+                })),
+                notes: order.customerNotes || '',
+                terms: order.termsConditions || '',
+                discount: order.discountPercent > 0 ? `${order.discountPercent}%` : "0%",
+                shipping_charge: order.shippingCharges,
+                adjustment: order.adjustment,
+            };
+        } else if (orderType.value === 'purchase') {
+            for (const item of items) {
+                await ensureItemHasPurchaseInfo(item.itemId, customer.id);
+            }
+
+            payload = {
+                type: 'purchase',
+                purchase_specific_field: order.purchaseSpecificField,
+                vendor_id: customer.id,
+                date: formatDateForZoho(order.orderDate),
+                shipment_date: formatDateForZoho(order.expectedShipmentDate),
+                reference_number: order.referenceNumber,
+                line_items: items.map(item => {
+                    const matchedItem = availableItems.value.find(i => i.item_id === item.itemId);
+
+                    return {
+                        item_id: item.itemId,
+                        name: matchedItem?.name || '',
+                        description: item.description || '',
+                        rate: item.rate,
+                        quantity: item.quantity,
+                        tax_id: item.taxId || '',
+                        item_total: (item.quantity * item.rate).toFixed(2),
+                        unit: "qty",
+                    };
+                }),
+                notes: order.customerNotes || '',
+                terms: order.termsConditions || '',
+                discount: order.discountPercent > 0 ? `${order.discountPercent}%` : "0%",
+                shipping_charge: order.shippingCharges,
+                adjustment: order.adjustment,
+            };
+        }
+
+        const response = await fetch(orderType.value === 'sales' ? '/api/inventory/create-sales-order' : '/api/inventory/create-purchase-order', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
         });
 
         const responseData = await response.json();
 
         if (!response.ok) {
-            const zohoError = responseData?.message || JSON.stringify(responseData);
-            throw new Error(`Zoho API Error: ${zohoError}`);
+            const apiError = responseData?.message || JSON.stringify(responseData);
+            throw new Error(apiError);
         }
 
-        successMessage.value = `Sales order created successfully!`;
+        successMessage.value = `${orderType.value === 'sales' ? 'Sales order' : 'Purchase order'} created successfully!`;
 
-        if (responseData.salesorder?.salesorder_number) {
-            salesOrderNumber.value = responseData.salesorder.salesorder_number;
+        if (responseData.salesorder?.salesorder_number || responseData.purchaseorder?.purchaseorder_number) {
+            salesOrderNumber.value = responseData.salesorder?.salesorder_number || responseData.purchaseorder?.purchaseorder_number;
         }
 
         resetForm();
     } catch (error) {
-        console.error('Error creating sales order:', error);
-        errorMessage.value = error.message.includes('Zoho API Error')
+        console.error('Error creating order:', error);
+        errorMessage.value = error.message.includes('Error')
             ? error.message
-            : 'Error creating sales order. Please check console for details.';
+            : `Error creating ${orderType.value} order. Please check console for details.`;
     } finally {
         isSubmitting.value = false;
     }
@@ -674,6 +596,12 @@ function resetForm() {
     errors.customerName = ''
     Object.keys(errors).forEach(k => { errors[k] = '' })
 }
+
+watch(orderType, () => {
+    fetchContactOrVendors()
+})
+
+fetchContactOrVendors()
 
 onMounted(() => {
     fetchLookups()

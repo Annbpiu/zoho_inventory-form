@@ -32,6 +32,8 @@ class InventoryController extends Controller
                     'item_id' => $item['item_id'] ?? null,
                     'name' => $item['name'] ?? '',
                     'rate' => $item['rate'] ?? 0,
+                    'purchase_account_id' => $item['purchase_account_id'] ?? null,
+                    'item_type' => $item['item_type'] ?? null,
                     'description' => $item['description'] ?? '',
                     'available_quantity' => $item['locations'][0]['location_actual_available_stock'] ?? null,
                     'vendor_id' => $item['vendor_id'] ?? null,
@@ -57,6 +59,47 @@ class InventoryController extends Controller
                 'status' => $response->status(),
                 'response_body' => $response->body(),
             ], 500);
+        }
+    }
+
+    public function updateZohoItem(Request $request, $itemId)
+    {
+        $validated = $request->validate([
+            'item_type' => 'required|string|in:inventory,sales,purchases,sales_and_purchases',
+            'purchase_account_id' => 'required|string',
+        ]);
+
+        $token = (new SyncController())->getZohoToken();
+        $organizationId = env('ZOHO_ORG_ID');
+
+        $url = "https://www.zohoapis.eu/inventory/v1/items/{$itemId}?organization_id={$organizationId}";
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Zoho-oauthtoken ' . $token,
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+        ])->put($url, [
+            'item_type' => $validated['item_type'],
+            'purchase_account_id' => $validated['purchase_account_id'],
+        ]);
+
+        if ($response->successful()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item updated successfully',
+                'data' => $response->json(),
+            ]);
+        } else {
+            \Log::error('Zoho Item Update Failed', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to update item in Zoho Inventory',
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ], $response->status());
         }
     }
 
@@ -201,6 +244,7 @@ class InventoryController extends Controller
             'sales_order' => $response->json()
         ]);
     }
+
     public function contacts()
     {
         $token = (new SyncController())->getZohoToken();

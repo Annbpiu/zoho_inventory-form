@@ -2,11 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
 use Illuminate\Support\Facades\Http;
 
 class SyncController extends Controller
 {
+    public function getPurchaseAccounts()
+    {
+        $token = (new SyncController())->getZohoToken();
+        $organizationId = env('ZOHO_ORG_ID');
+
+        $url = "https://www.zohoapis.eu/inventory/v1/chartofaccounts?organization_id={$organizationId}";
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Zoho-oauthtoken ' . $token
+        ])->get($url);
+
+        if ($response->successful()) {
+            $accounts = collect($response->json()['chartofaccounts'] ?? [])
+                ->filter(function ($acc) {
+                    return $acc['is_active'] && strtolower($acc['account_type']) === 'expense';
+                })->values();
+
+            return response()->json($accounts);
+        }
+
+        return response()->json([
+            'error' => 'Failed to fetch accounts',
+            'body' => $response->body(),
+        ], 500);
+    }
+
     public function getZohoToken()
     {
         $response = Http::asForm()->post('https://accounts.zoho.eu/oauth/v2/token', [
