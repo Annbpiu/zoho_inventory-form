@@ -35,6 +35,8 @@
             :paymentTerms="paymentTerms"
             :deliveryMethods="deliveryMethods"
             :sales-order-number="salesOrderNumber"
+            :sameAsBilling="sameAsBilling"
+            :submitNewCustomer="submitNewCustomer"
             @update-customer="onCustomerChange"
             @toggle-new-customer-modal="showNewCustomerModal = $event"
         />
@@ -243,8 +245,6 @@ async function fetchLookups() {
         const [itemsRes, taxesRes, paymentTermsRes, deliveryMethodsRes] = await Promise.all([
             fetch('/api/inventory/items'),
             fetch('/api/inventory/taxes'),
-            fetch('/api/inventory/payment-terms'),
-            fetch('/api/inventory/delivery-methods'),
         ])
 
         if (!itemsRes.ok) {
@@ -260,10 +260,6 @@ async function fetchLookups() {
         } else {
             availableTaxes.value = await taxesRes.json()
         }
-
-        paymentTerms.value = paymentTermsRes.ok ? await paymentTermsRes.json() : []
-        deliveryMethods.value = deliveryMethodsRes.ok ? await deliveryMethodsRes.json() : []
-
     } catch (error) {
         errorMessage.value = error.message || 'Unknown error while fetching lookups'
         console.error(error)
@@ -275,6 +271,7 @@ function addItem() {
         id: Date.now(),
         itemId: '',
         description: '',
+        purchase_account_id: null,
         quantity: 1,
         rate: 0,
         taxId: '',
@@ -336,22 +333,6 @@ function formatCurrency(value) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'UAH' }).format(value || 0)
 }
 
-function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
-}
-
-function onFileChange(e) {
-    const selectedFiles = Array.from(e.target.files)
-    for (const file of selectedFiles) {
-        if (files.value.length >= 10) break
-        if (file.size > 5 * 1024 * 1024) continue
-        files.value.push(file)
-    }
-    e.target.value = null
-}
-
 function removeFile(index) {
     files.value.splice(index, 1)
 }
@@ -388,7 +369,7 @@ function validateForm() {
     return valid
 }
 
-async function ensureItemHasPurchaseInfo(itemId, customerId) {
+async function ensureItemHasPurchaseInfo(itemId, purchase_account_id) {
     try {
         await fetch(`/api/inventory/items/${itemId}`, {
             method: 'PUT',
@@ -397,8 +378,8 @@ async function ensureItemHasPurchaseInfo(itemId, customerId) {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
-                item_type: 'inventory',
-                purchase_account_id: '782558000000000509',
+                item_type: 'sales_and_purchases',
+                purchase_account_id: purchase_account_id,
             }),
         });
     } catch (error) {
@@ -447,8 +428,10 @@ async function submitForm(status = 'confirmed') {
             };
         } else if (orderType.value === 'purchase') {
             for (const item of items) {
-                await ensureItemHasPurchaseInfo(item.itemId, customer.id);
+                console.log(item);
+                await ensureItemHasPurchaseInfo(item.itemId, item.purchase_account_id);
             }
+
 
             payload = {
                 type: 'purchase',
@@ -518,8 +501,10 @@ function formatDateForZoho(dateString) {
     return date.toISOString().split('T')[0];
 }
 
-async function submitNewCustomer() {
-    if (!newCustomer.last_name || !newCustomer.display_name) {
+async function submitNewCustomer(newCustomer) {
+    console.log('Received customer:', newCustomer);
+
+    if (!newCustomer.last_name?.trim() || !newCustomer.display_name?.trim()) {
         alert('Last name and display name are required');
         return;
     }

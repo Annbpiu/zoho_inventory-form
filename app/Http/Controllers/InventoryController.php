@@ -8,60 +8,6 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    public function items(Request $request)
-    {
-        $token = (new SyncController())->getZohoToken();
-        $organizationId = env('ZOHO_ORG_ID');
-
-        $url = 'https://www.zohoapis.eu/inventory/v1/items?organization_id=' . $organizationId;
-
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $token
-        ])->get('https://www.zohoapis.eu/inventory/v1/items', [
-            'organization_id' => env('ZOHO_ORG_ID')
-        ]);
-
-        if ($response->successful()) {
-            $data = $response->json();
-
-            $items = $data['items'] ?? [];
-
-            $formattedItems = array_map(function ($item) {
-                return [
-                    'item_id' => $item['item_id'] ?? null,
-                    'name' => $item['name'] ?? '',
-                    'rate' => $item['rate'] ?? 0,
-                    'purchase_account_id' => $item['purchase_account_id'] ?? null,
-                    'item_type' => $item['item_type'] ?? null,
-                    'description' => $item['description'] ?? '',
-                    'available_quantity' => $item['locations'][0]['location_actual_available_stock'] ?? null,
-                    'vendor_id' => $item['vendor_id'] ?? null,
-                    'vendor_name' => $item['vendor_name'] ?? '',
-                    'tax_id' => $item['tax_id'] ?? null,
-                    'tax_name' => $item['tax_name'] ?? '',
-                    'tax_percentage' => $item['tax_percentage'] ?? 0,
-                    'sku' => $item['sku'] ?? '',
-                    'unit' => $item['unit'] ?? '',
-                ];
-            }, $items);
-
-            return response()->json($formattedItems);
-        } else {
-            \Log::error('Zoho Inventory API error', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-                'headers' => $response->headers(),
-            ]);
-
-            return response()->json([
-                'error' => 'Failed to fetch items from Zoho Inventory',
-                'status' => $response->status(),
-                'response_body' => $response->body(),
-            ], 500);
-        }
-    }
-
     public function updateZohoItem(Request $request, $itemId)
     {
         $validated = $request->validate([
@@ -101,38 +47,6 @@ class InventoryController extends Controller
                 'body' => $response->body(),
             ], $response->status());
         }
-    }
-
-    public function taxes()
-    {
-        $token = (new SyncController())->getZohoToken();
-        $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $token,
-        ])->get('https://www.zohoapis.eu/inventory/v1/taxes', [
-            'organization_id' => env('ZOHO_ORG_ID'),
-        ]);
-
-        if ($response->successful()) {
-            return response()->json($response->json()['taxes'] ?? []);
-        }
-
-        return response()->json([], 500);
-    }
-
-    public function paymentTerms()
-    {
-        $token = (new SyncController())->getZohoToken();
-        $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $token,
-        ])->get('https://www.zohoapis.eu/inventory/v1/paymentterms', [
-            'organization_id' => env('ZOHO_ORG_ID'),
-        ]);
-
-        if ($response->successful()) {
-            return response()->json($response->json()['payment_terms'] ?? []);
-        }
-
-        return response()->json([], 500);
     }
 
     public function createContact(Request $request)
@@ -175,8 +89,21 @@ class InventoryController extends Controller
             'Content-Type' => 'application/json',
         ])->post('https://www.zohoapis.eu/inventory/v1/contacts?organization_id=' . env('ZOHO_ORG_ID'), $payload);
 
+        \Log::info('Zoho API Response:', [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
+
         if ($response->successful()) {
             return response()->json($response->json()['contact']);
+        }
+
+        if ($response->header('Content-Type') !== 'application/json') {
+            return response()->json([
+                'message' => 'Unexpected response from Zoho API',
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ], $response->status());
         }
 
         return response()->json([
@@ -244,18 +171,4 @@ class InventoryController extends Controller
             'sales_order' => $response->json()
         ]);
     }
-
-    public function contacts()
-    {
-        $token = (new SyncController())->getZohoToken();
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Zoho-oauthtoken ' . $token,
-        ])->get('https://www.zohoapis.eu/inventory/v1/contacts', [
-            'organization_id' => config('ZOHO_ORG_ID'),
-        ]);
-
-        return response()->json($response->json()['contacts'] ?? []);
-    }
-
 }

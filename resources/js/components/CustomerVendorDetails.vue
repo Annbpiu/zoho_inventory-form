@@ -140,9 +140,22 @@
                     </div>
                 </div>
 
+                <div
+                    v-if="alertMessage"
+                    :class="{
+                        'bg-green-100 border-green-400 text-green-700': alertType === 'success',
+                        'bg-red-100 border-red-400 text-red-700': alertType === 'error',
+                    }"
+                    class="border px-4 py-3 rounded relative mb-4"
+                    role="alert"
+                >
+                    <span class="block sm:inline">{{ alertMessage }}</span>
+                </div>
+
+
                 <div class="flex justify-end mt-6 space-x-3">
                     <button class="btn-cancel" @click="showNewCustomerModal = false">Cancel</button>
-                    <button class="btn-submit" @click="submitNewCustomer">Save</button>
+                    <button class="btn-submit" @click="handleSubmit">Save</button>
                 </div>
             </div>
         </div>
@@ -170,24 +183,6 @@
         <div>
             <label class="block font-medium mb-1">Expected Shipment Date</label>
             <input v-model="order.expectedShipmentDate" type="date" class="input" />
-        </div>
-
-        <!-- Payment Terms -->
-        <div>
-            <label class="block font-medium mb-1">Payment Terms</label>
-            <select v-model="order.paymentTerm" class="input">
-                <option value="">Select Payment Term</option>
-                <option v-for="term in paymentTerms" :key="term.id" :value="term.id">{{ term.name }}</option>
-            </select>
-        </div>
-
-        <!-- Delivery Method -->
-        <div>
-            <label class="block font-medium mb-1">Delivery Method</label>
-            <select v-model="order.deliveryMethod" class="input">
-                <option value="">Select Delivery Method</option>
-                <option v-for="method in deliveryMethods" :key="method.id" :value="method.id">{{ method.name }}</option>
-            </select>
         </div>
     </div>
 </template>
@@ -229,6 +224,21 @@ export default {
             type: Object,
             required: true,
         },
+        sameAsBilling: {
+            type: Boolean,
+            required: true,
+        },
+        submitNewCustomer: {
+            type: Function,
+            required: true,
+        },
+    },
+    methods: {
+        async handleSubmit() {
+            await this.submitNewCustomer({ ...this.newCustomer });
+
+            this.showAlert('Customer successfully created!', 'success');
+        },
     },
     emits: ['update-customer', 'toggle-new-customer-modal'],
     setup(props, { emit }) {
@@ -259,6 +269,7 @@ export default {
 
         return {
             labelText,
+            sameAsBilling: false,
             showNewCustomerModal,
             newCustomer,
             selectedCustomer,
